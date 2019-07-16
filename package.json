@@ -1,16 +1,11 @@
 {
   "name": "simple-web-app",
   "version": "1.0.0",
-  "engines": {
-    "node": "v10.15.0"
-  },
-  "scripts": {
-    "start": "app.js"
-  },
   "description": "Web logging app",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start":"node app.js"
   },
   "author": "me",
   "license": "ISC",

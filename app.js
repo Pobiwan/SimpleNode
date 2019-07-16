@@ -249,8 +249,8 @@ app.post('/logout',(req,res)=>{
 )
 
 //Monitor db for changes
-const faultcollection = db.collection('faults').watch();
-const changeStreamIterator = faultcollection.watch();
+//const faultcollection = db.collection('faults').watch();
+//const changeStreamIterator = faultcollection.watch();
 
 
 
