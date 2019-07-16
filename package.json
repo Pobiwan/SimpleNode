@@ -4,6 +4,9 @@
   "engines": {
     "node": "v10.15.0"
   },
+  "scripts": {
+    "start": "node your-script.js"
+  },
   "description": "Web logging app",
   "main": "app.js",
   "scripts": {
