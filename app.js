@@ -137,7 +137,7 @@ app.post('/uploadFault',urlencodedParser,(req,res)=>
   }
 )
 
-app.post('/loginCheck', function(req, res, next) {
+app.get('/loginCheck', function(req, res, next) {
   passport.authenticate('local', function(err, user, isMatch) {
     if (err) { return next(err); }
     if (!user) {

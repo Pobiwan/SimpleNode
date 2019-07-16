@@ -53,7 +53,7 @@ $(document).ready(function(){
     var password = $('#pw1').val().trim();
     var loginDetails = {username:username,password:password};
     var request = $.ajax({
-      type: 'POST',
+      type: 'GET',
       url: '/loginCheck',
       data: loginDetails,
       dataType:"json",
