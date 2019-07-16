@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>Login Page</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link href="/assets/style.css" type="text/css" rel="stylesheet"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="/assets/logics.js"></script>
+</head>
+<body>
+<h1> Welcome to fault logging website </h1>
+<div id="wrapper">
+<div class="form_div">
+<p class="form_label">Login Here</p>
+<form name="loginForm" id ="loginForm" action="">
+<p><input type="text" name = 'username' id = 'name1' placeholder="Enter Name *" required></p>
+<p><input type="password" name = 'userpw' id = 'pw1' placeholder="**********" required></p>
+<p><input type="submit" value="LOGIN"></p>
+</form>
+</div>
+<br>
+<br>
+<br>
+<div class="form_div">
+<p class="form_label">Register for an account here</p>
+<form name="submitForm" id ="submitForm" action="">
+<p><input type="text" name = 'username2' id = 'name2' placeholder="Enter Name *" required></p>
+<p><input type="email" name = 'useremail' id = 'email2' placeholder="Enter Email *" required></p>
+<p><input type="password" id="psw" name = "psw" pattern="(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}" placeholder="*********" requried></p>
+<div class="popup">
+  <span class="popuptext" id="myPopup">Password must contain at least 8 characters with a special character</span>
+</div>
+<p><input type="submit" value="SIGNUP"></p>
+</form>
+</div>
+</div>
+</body>
+</html>

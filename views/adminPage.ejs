@@ -1,0 +1,36 @@
+<html lang="en">
+<head>
+  <title>Admin Page</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width">
+  <link href="/assets/tablestyle.css" type="text/css" rel="stylesheet"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+  <script src="/assets/logics.js"></script>
+</head>
+<body>
+<div class="container">
+  <h2>Incident Report</h2>
+  <ul class="responsive-table">
+    <li class="table-header">
+      <div class="col col-1">Title</div>
+      <div class="col col-2">Location</div>
+      <div class="col col-3">Description</div>
+      <div class="col col-4">TimeStamp</div>
+      <div class="col col-5">Image</div>
+    </li>
+    <% data.forEach(function(item){ %>
+    <li class="table-row">
+      <div class="col col-1" data-label="Title"><%= item.title %></div>
+      <div class="col col-2" data-label="Location"><%= item.location %></div>
+      <div class="col col-3" data-label="Description"><%= item.description %></div>
+      <div class="col col-4" data-label="TimeStamp"><%= item.time %></div>
+      <div class="col col-5" data-label="Image"><a href="/getImage/<%= item._id %>">Show Image</a></div>
+    </li>
+    <% }); %>
+  </ul>
+</div>
+<div style="text-align: center">
+    <a href="/logout" class="button large hpbottom">Log Out</a>
+</div>
+</body>
