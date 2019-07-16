@@ -54,7 +54,7 @@ $(document).ready(function(){
     var loginDetails = {username:username,password:password};
     var request = $.ajax({
       type: 'GET',
-      url: '/loginCheck',
+      url: '/loginCheck/username/password',
       data: loginDetails,
       dataType:"json",
       success:function(data){
