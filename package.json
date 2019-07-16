@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "engines": {
     "node": "v10.15.0"
-  }
+  },
   "description": "Web logging app",
   "main": "app.js",
   "scripts": {
