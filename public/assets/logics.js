@@ -9,22 +9,30 @@ $(document).ready(function(){
     $('#myPopup').toggleClass('hide');
   });
 
-  $('#reportForm').on("submit", function(e) {
+  // logic for sme registration
+  $('#smeForm').on("submit", function(e) {
     e.preventDefault();
     var formData = new FormData();
-    var title = $('#title1').val();
+    var email = $('#email').val(); 
+    var companyname = $('#companyname').val();
     var location = $('#location1').val();
-    var description = $('#text1').val();
-    var timestamp = new Date();
-    formData.append('title',title);
+    var postal = $('#postal').val();
+    var foundingdate = $('#foundingdate').val();
+    var capital = $('#capital').val();
+    var userposition = $('#userposition').val();
+    // identify by email
+    formData.append('email',email);
+    formData.append('companyname',companyname);
     formData.append('location',location);
-    formData.append('description',description);
-    formData.append('timestamp',timestamp);
-    var imageFiles = document.getElementById('imageFiles');
+    formData.append('postal',postal);
+    formData.append('foundingdate',foundingdate);
+    formData.append('capital',capital);
+    formData.append('userposition',userposition);
+    var imageFiles = document.getElementById('annualReport');
     var imageList = imageFiles.files;
     for (var i = 0; i < imageList.length; i++) {
       var image = imageList[i];
-  // Check the file type.
+  // Check the file type. 
       if (!image.type.match('image.*')) {
         continue;
       }
@@ -33,25 +41,27 @@ $(document).ready(function(){
     }
     var request = $.ajax({
       type: 'POST',
-      url: '/uploadFault',
+      url: '/uploadForm',
       data: formData,
       contentType: false,
       cache: false,
       dataType:"text",
       processData: false,
       success:function(data){
-        alert(data);
-        window.location.href='/logout'
+        console.log(data);
+        window.location.href='/logout';
       }
     })
 
   });
 
+  // login in form submit logic
   $('#loginForm').on("submit", function(e) {
     e.preventDefault();
     var username = $('#name1').val().trim();
     var password = $('#pw1').val().trim();
     var loginDetails = {username:username,password:password};
+    //sending ajax request 
     var request = $.ajax({
       type: 'GET',
       url: '/loginCheck/username/password',
@@ -60,10 +70,11 @@ $(document).ready(function(){
       success:function(data){
         //console.log('data is ' + JSON.stringify(data));
         if(data.message == 'User Authenticated'){
-          if(data.userrole == 'user'){
-            window.location.href = '/logissue'
+          if(data.userrole == 'USER'){
+            window.location.href = '/userpage';
           }else{
-            window.location.href = '/adminPage'
+            // if user is sme
+            //window.location.href = '/smepage';
           }
         }else{
           alert(data.message);
@@ -72,26 +83,36 @@ $(document).ready(function(){
       })
   });
 
+  // registration form submit logic
   $('#submitForm').on("submit", function(e) {
     e.preventDefault();
     var username = $('#name2').val().trim();
     var email = $('#email2').val().trim();
     var password = $('#psw').val().trim();
-    var creationDetails = {un:username,email:email,pw:password};
+    var role = $('#typeOfUser :selected').val();
+    var creationDetails = {un:username,email:email,pw:password,role:role};
     var request = $.ajax({
       type: 'POST',
       url: '/submitNewUser',
       data: creationDetails,
-      dataType:"text",
+      dataType:"json",
       success:function(data){
-        alert(data);
-        location.reload();
+        if (data.role === 'USER'){
+         alert(`New user account for ${data.username} created, you can login now`);
+         window.location.reload();
+        }else{
+          // sme account 
+          console.log('redirecting to sme form after sme users are created') ;
+          window.location.href = '/smeForm/' + data.username + '/' + data.email;              
+        }
+        //location.reload();
       },
-      error:function(error){
-        alert(error);
-        location.reload();
+      error:function(xhr,status,thrownError){
+        console.log('error is',xhr);
+        alert('Duplicate email, please enter a new email!');
+        $('#email2').val('');
+        $('#email2').focus();
       }
     })
-
   })
 });

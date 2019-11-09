@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start":"node app.js"
+    "start": "nodemon app.js"
   },
   "author": "me",
   "license": "ISC",
@@ -14,6 +14,10 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "connect-flash": "^0.1.1",
+    "connect-mongo": "^3.1.2",
+    "connect-mongodb-session": "^2.2.0",
+    "connect-redis": "^4.0.3",
+    "cookie-parser": "^1.4.4",
     "ejs": "^2.6.2",
     "express": "^4.17.1",
     "express-messages": "^1.0.1",
@@ -27,6 +31,8 @@
     "nodemon": "^1.19.1",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "redis": "^2.8.0",
+    "socket.io": "^2.3.0"
   }
 }

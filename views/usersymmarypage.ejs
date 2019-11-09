@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>User Summary Page</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link href="/assets/style.css" type="text/css" rel="stylesheet"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="/assets/logics.js"></script>
+<body>
+  <h1>Welcome user <%= username %></h1>
+<div name ='userDiv' id='User'>
+  <p>Account Balance : <%= accountBalance %> </p>
+  <div class="container">
+    <h2>Opportunities</h2>
+    <ul class="responsive-table">
+      <li class="table-header">
+        <div class="col col-1">Name</div>
+        <div class="col col-2">Company</div>
+        <div class="col col-3">Min Amount</div>
+        <div class="col col-4">Duration</div>
+        <div class="col col-5">Description</div>
+      </li>
+      <% data.forEach(function(item){ %>
+      <li class="table-row">
+        <div class="col col-1" data-label="Title"><%= item.title %></div>
+        <div class="col col-2" data-label="Location"><%= item.location %></div>
+        <div class="col col-3" data-label="Description"><%= item.description %></div>
+        <div class="col col-4" data-label="TimeStamp"><%= item.time %></div>
+        <div class="col col-5" data-label="Image"><a href="/getImage/<%= item._id %>">Show Image</a></div>
+      </li>
+      <% }); %>
+    </ul>
+  </div>
+</div>
+<div style="text-align: center">
+  <a href="/logout" class="button large hpbottom">Log Out</a>
+</div>
+</body>
+</head>
+</html>

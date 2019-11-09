@@ -53,6 +53,21 @@ font-size:17px;
 padding-left:5px;
 border:none;
 }
+
+.form_div #typeOfUser{
+  width:230px;
+  height:40px;
+  border-radius:2px;
+  font-size:17px;
+  padding-left:5px;
+  border:none;
+}
+.form_div #typeOfUser:required:invalid {
+    color:gray;
+}
+option[value=""][disabled] {
+  display: none;
+  }
 .form_div input[type="submit"]
 {
 width:230px;
@@ -197,3 +212,4 @@ width:80%;
   -webkit-animation: fadeIn 1s;
   animation: fadeIn 1s;
 }
+

@@ -1,21 +1,27 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-var controller = require('./controllers/webappcontroller');
-const port = process.env.PORT || 3000;
+//var controller = require('./controllers/webappcontroller');
+const port = process.env.PORT || 4500;
+const http = require('http').createServer(app); 
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
-const jsonParser = bodyParser.json();
 const passport = require('passport');
 const LocalStrategy =  require('passport-local').Strategy;
+const session = require('express-session');
+const mongoStore  = require('connect-mongo')(session);
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
+
 const fs = require('fs');
+var io = require('socket.io')(http); 
 app.set('views',path.join(__dirname,'views'));
 app.set('view engine','ejs');
 app.use(express.static('./public'));
-// storage engine
+
+//storage engine for multer
 const storage = multer.diskStorage({
   destination:'./public/uploads/',
   filename:function(req,file,cb){
@@ -26,15 +32,18 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage
 }).single('myimage');
-/*const MongoClient = require('mongodb').MongoClient;
+/*
+const MongoClient = require('mongodb').MongoClient;
 const url = "mongodb+srv://admin123:admin123@cluster0-jnljp.mongodb.net/test?retryWrites=true&w=majority";
 MongoClient.connect(url, { useNewUrlParser: true },(err,client) => {;
   assert.equal(null,err);
   console.log("Connected successfully to server");
   const db = client.db('Testing');
 client.close();
-});*/
-mongoose.connect('mongodb+srv://admin123:admin123@cluster0-jqggg.mongodb.net/Testing?retryWrites=true&w=majority',{useNewUrlParser: true});
+});
+*/
+
+mongoose.connect('mongodb+srv://admin123:admin123@cluster0-jqggg.mongodb.net/Fintech?retryWrites=true&w=majority',{useNewUrlParser: true});
 var db = mongoose.connection;
 
 db.once('open',function(){
@@ -45,18 +54,41 @@ db.on('error',function(err){
   console.log("err occured when connecting to db " + err);
 })
 
+
+// data models area
 let User = require('./models/users');
-let Fault = require('./models/faults');
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
-app.use(require('flash')());
+let Opportunity = require('./models/opportunity');
+let Company = require('./models/companyinfo');
+let UserAccount = require('./models/useraccount');
+// data models area
+
+// middleware area
+app.use(session(
+  { 
+  secret: 'keyboard cat', 
+  resave: true, 
+  saveUninitialized: true,
+  cookie:{
+    secure:false,
+    maxAge: 1000 * 60 * 60 * 24 * 7  // 1 week
+  },
+   store : new mongoStore(
+  { 
+       mongooseConnection: db 
+     })
+}));
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.session({
+})); // to use passport persistent session
 
+// configuring localstrategy, find user with username
 passport.use(new LocalStrategy(
   function(username, password, done) {
-    User.findOne({ username: username }, function (err, user) {
+    User.findOne({ email: username }, function (err, user) { // user object from database
       if (err) { return done(err); }
       if (!user) {
         return done(null, false, {message: 'No user found!'});
@@ -77,18 +109,26 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser(function(user, done) {
+  console.log('serializing');
+  console.log('serializing user', user);
   done(null, user.id);
 });
 
-passport.deserializeUser(function(id, done) {
+passport.deserializeUser(function(id, done) { // subsequent requests
+  console.log('deseializing');
   User.findById(id, function (err, user) {
-    done(err, user);
+    console.log('deseializing user', user);
+    done(err, user); // store to req.user
   });
 });
 
+
 // routes
 app.get('*', (req,res,next)=>{
-  res.locals.user = req.user || null;
+  console.log('hitted');
+  console.log('user is ', req.user);
+  console.log('req.user serialP', req.session);
+  //res.locals.user = req.user || null;
   next();
 })
 
@@ -105,38 +145,7 @@ app.get('/login',(req,res)=>
   }
 )
 
-app.post('/uploadFault',urlencodedParser,(req,res)=>
-  {
-    console.log('username 1 is ' + JSON.stringify(req.session));
-    upload(req,res,(err)=>{
-      if (err){
-        console.log( err);
-      }else{
-        console.log('file is ' + JSON.stringify(req.file));
-        var newFault = new Fault({
-          title: req.body.title,
-          time: req.body.timestamp,
-          location:req.body.location,
-          description:req.body.description,
-          raiseby:req.user.username
-        })
-          //img.data = fs.readFileSync
-          newFault.img.data = fs.readFileSync(req.file.path);
-          newFault.img.contentType='image/png';
-          newFault.img.name=req.file.originalname;
-          newFault.save(function(err){
-            if(err){
-              console.log(err);
-            }else{
-              console.log('success')
-              res.send('Thank you for uploading, logging out now');
-            }
-          });
-      }
-    })
-  }
-)
-
+// this is for login passport authentication
 app.get('/loginCheck/:username/:password', function(req, res, next) {
   passport.authenticate('local', function(err, user, isMatch) {
     if (err) { return next(err); }
@@ -149,6 +158,7 @@ app.get('/loginCheck/:username/:password', function(req, res, next) {
       if (err) {
         return next(err)
       }
+      // req.user object will be populated
       console.log(req.user.username + ' is logged in');
       //req.session.user =  req.user;
       return res.send({message:'User Authenticated',username:req.user.username,userrole:req.user.role});
@@ -156,16 +166,142 @@ app.get('/loginCheck/:username/:password', function(req, res, next) {
   })(req, res, next)
 });
 
+// this is for sme sign up
+app.get('/smeForm/:username/:email',urlencodedParser,(req,res)=>{
+  let params =  req.params;
+  res.set('Content-Type','text/html');
+  res.render('smeregistration',{username:params.username,email:params.email});
+  
+});
+
+// this is for registering new user
+app.post('/submitNewUser',urlencodedParser, (req,res)=>{
+  let newUser = new User({
+    username:req.body.un,
+    email:req.body.email,
+    role:req.body.role,
+    password:req.body.pw
+  });
+
+  bcrypt.genSalt(10,function(err,salt){
+    bcrypt.hash(newUser.password,salt,function (err,hash){
+      if(err){
+        console.log(err);
+      }
+      newUser.password = hash;
+        newUser.save(function(error,record){
+          if(error){
+            console.log(error);
+            // can send back data and status
+            res.send(400,error);
+          }else{
+            console.log(record);
+            res.send(200,record);
+            //res.status(200).send(`User ${record.username} created successfully, you can log in now`);
+          }
+    })
+  })
+})
+});
+
+// this is for sme page
+app.get('/smePage',urlencodedParser,(req,res)=>{
+  console.log('smePage')
+  // getting data from database
+  res.render('smesummarypage');
+});
+
+app.get('/userPage',isAuthenticated,urlencodedParser, async (req,res)=>{
+  console.log('user page');
+  let useraccountinfo = await UserAccount.findOne({
+    email: req.user.email}).
+    populate('user');
+      console.log('Account info',useraccountinfo);
+      // get old opportunities
+    let oldOpportunities = await Opportunity.find({
+
+    })
+      // get new opportunities
+    let newOpportunities = await Opportunity.find({
+
+    })
+    console.log(opportunities)
+  });
+   
+
+  
+// this is for logging out
+app.post('/logout',(req,res)=>{
+  res.redirect('/');
+}
+)
+
+app.get('/logout',(req,res)=>{
+  res.redirect('/');
+}
+)
+
+app.post('/uploadForm',urlencodedParser,(req,res)=>
+  {
+    upload(req,res,(err)=>{
+      if (err){
+        console.log( err);
+      }else{
+        console.log(req.body.companyname)
+        var newCompany = new Company({
+          email: req.body.email,
+          companyname: req.body.companyname,
+          location:req.body.location,
+          location:req.body.location,
+          postal:req.body.postal,
+          foundingdate:req.body.foundingdate,
+          capital:req.body.capital,
+          userposition:req.body.userposition
+        })
+          //img.data = fs.readFileSync
+          newCompany.report.data = fs.readFileSync(req.file.path);
+          newCompany.report.contentType='image/png';
+          newCompany.report.name=req.file.originalname;
+          newCompany.save(function(err){
+            if(err){
+              console.log(err);
+            }else{
+              console.log('success')
+              res.send('Thank you for uploading, logging out now');
+            }
+          });
+      }
+    })
+  }
+)
+        /*
+        if(err){
+          if(err.errmsg.includes('duplicate')){
+              res.send('Username taken, please choose another one');
+          // }else{
+            console.log(err);
+            res.send('error occured', err);
+          // }
+        }else {
+          res.status(200).send(`User ${userName} created successfully, you can log in now`);
+        }
+      })
+    })
+  })
+}
+)
+
 app.get('/adminPage',function(req,res){
   //var data = [{title:"lala",location:"lala2",description:"lala3",timestamp:"lala4",image:"image"},{title:"lala5",location:"lala6",description:"lala7",timestamp:"lala8",image:"image2"}]
   if (res.locals.user){
     if(res.locals.user.role == 'admin'){
-      Fault.find({},function(err,docs){
+      oo.find({},function(err,docs){
         if(err){
           console.log(err);
         }else{
           console.log('docs are' + docs);
           //res.contentType(docs[0].img.contentType);
+          //render the adminPage, with data
           res.render('adminPage',{data:docs});
         }
       })
@@ -178,35 +314,8 @@ app.get('/adminPage',function(req,res){
   }
 })
 
-app.post('/submitNewUser',urlencodedParser,(req,res)=>{
-  let newUser = new User({
-    username:req.body.un,
-    email:req.body.email,
-    password:req.body.pw,
-    role:'user'
-  });
 
-  bcrypt.genSalt(10,function(err,salt){
-    bcrypt.hash(newUser.password,salt,function (err,hash){
-      if(err){
-        console.log(err);
-      }
-      newUser.password = hash;
-      newUser.save(function(err){
-        if(err){
-          if(err.errmsg.includes('duplicate')){
-            res.send('Username taken, please choose another one');
-          }else{
-            res.send(err.errmsg);
-          }
-        }else {
-          res.send('User created successfully, you can log in now');
-        }
-      })
-    })
-  })
-}
-)
+
 
 app.get('/logissue',(req,res)=>
   {
@@ -235,23 +344,29 @@ app.get('/image/:_id',(req,res)=>{
     }
   })
 })
+*/
 
-app.get('/logout',(req,res)=>{
-  req.logout();
-  res.redirect('/');
+http.listen(port,()=> console.log('Listening on port 4500'));
+
+// helper function 
+function isAuthenticated(req,res,next){
+  console.log('inside auth');
+  if(req.user){
+    console.log('user authed');
+    next();
+  }else{
+    console.log('user not authed');
+    res.redirect('/');
+  }
 }
-)
 
-app.post('/logout',(req,res)=>{
-  req.logout();
-  res.redirect('/');
+function roleGuard(role){
+ console.log('inside role');
+ return (req,res,next)=>{
+  if(req.user.role != role){
+    res.end('You are not authorized to view this page!');
+  }else{
+    next();
+  }
 }
-)
-
-//Monitor db for changes
-//const faultcollection = db.collection('faults').watch();
-//const changeStreamIterator = faultcollection.watch();
-
-
-
-app.listen(port,()=> console.log('Listening on port 3000'));
+}
